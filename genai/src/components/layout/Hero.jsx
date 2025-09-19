@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { featuredArtist } from '../../data/mockData';
 import { useMultiLayerParallax, useScrollAnimation, useTextReveal, useImageReveal, useMagneticEffect, useFloatingAnimation, useMorphingBackground, useSmoothScroll } from '../../hooks';
 import PlasmaBackground from '../ui/PlasmaBackground';
@@ -132,24 +133,21 @@ const Hero = ({ onExploreClick, onViewArtistClick }) => {
                 transition: 'all 1s cubic-bezier(0.25, 0.46, 0.45, 0.94) 1s'
               }}
             >
-              <button 
+              <Link 
+                to="/discovery"
                 ref={buttonRef}
                 className="btn-primary hero-cta magnetic-button enhanced-button"
-                onClick={() => {
-                  scrollToElement('gallery', 80);
-                  if (onExploreClick) onExploreClick();
-                }}
               >
                 <span className="button-text">Explore Gallery</span>
                 <span className="button-icon">✨</span>
-              </button>
-              <button 
+              </Link>
+              <Link 
+                to="/discovery"
                 className="btn-secondary hero-cta enhanced-button"
-                onClick={() => scrollToElement('gallery', 100)}
               >
                 <span className="button-text">Discover Artists</span>
                 <span className="button-icon">🎨</span>
-              </button>
+              </Link>
             </div>
           </div>
           

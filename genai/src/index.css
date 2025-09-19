@@ -148,7 +148,7 @@ button {
   font-family: var(--font-sans);
   font-weight: 500;
   border: none;
-  border-radius: var(--radius-md);
+  border-radius: 4px;
   cursor: pointer;
   transition: all var(--transition-medium);
   padding: var(--spacing-sm) var(--spacing-lg);
@@ -199,7 +199,7 @@ input, textarea, select {
   font-size: 1rem;
   padding: var(--spacing-sm) var(--spacing-md);
   border: 2px solid var(--light-gray);
-  border-radius: var(--radius-md);
+  border-radius: 4px;
   background-color: var(--white);
   color: var(--charcoal);
   transition: border-color var(--transition-fast);
