@@ -12,7 +12,8 @@ const Header = () => {
 
   const navItems = [
     { id: 'home', name: 'Home', path: '/' },
-    { id: 'discovery', name: 'Discovery', path: '/discovery' }
+    { id: 'discovery', name: 'Discovery', path: '/discovery' },
+    { id: 'my-artworks', name: 'My Artworks', path: '/my-artworks' }
   ];
 
   const handleNavClick = (itemId, href, path) => {
@@ -47,6 +48,8 @@ const Header = () => {
       setActiveNavItem('home');
     } else if (location.pathname === '/discovery') {
       setActiveNavItem('discovery');
+    } else if (location.pathname === '/my-artworks') {
+      setActiveNavItem('my-artworks');
     }
   }, [location.pathname]);
 
@@ -62,13 +65,20 @@ const Header = () => {
             const linkRect = activeLink.getBoundingClientRect();
             const containerRect = navBgRef.current.parentElement.getBoundingClientRect();
             
-            // Account for logo width by adding offset
-            const logoOffset = 120; // Approximate logo width
-            const offsetX = Math.max(logoOffset, linkRect.left - containerRect.left - 8); // 8px padding
-            const width = Math.max(80, linkRect.width); // Minimum width
+            // Calculate proper offset accounting for logo
+            const logoElement = navList?.querySelector('.logo-item');
+            const logoWidth = logoElement ? logoElement.offsetWidth + 16 : 120; // Add margin
+            const offsetX = Math.max(logoWidth, linkRect.left - containerRect.left - 8);
+            const width = Math.max(80, linkRect.width + 16); // Add padding
             
             navBgRef.current.style.transform = `translateX(${offsetX}px)`;
             navBgRef.current.style.width = `${width}px`;
+          } else {
+            // Default position when no active link
+            const logoElement = navList?.querySelector('.logo-item');
+            const logoWidth = logoElement ? logoElement.offsetWidth + 16 : 120;
+            navBgRef.current.style.transform = `translateX(${logoWidth}px)`;
+            navBgRef.current.style.width = '80px';
           }
         } catch (error) {
           console.warn('Error updating nav background position:', error);
@@ -151,6 +161,11 @@ const Header = () => {
             <li className="nav-mobile-item">
               <Link to="/discovery" className="nav-mobile-link" onClick={() => setIsMenuOpen(false)}>
                 Discovery
+              </Link>
+            </li>
+            <li className="nav-mobile-item">
+              <Link to="/my-artworks" className="nav-mobile-link" onClick={() => setIsMenuOpen(false)}>
+                My Artworks
               </Link>
             </li>
           </ul>
