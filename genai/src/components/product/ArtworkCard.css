@@ -1,0 +1,423 @@
+/* Artwork Card Styles */
+.artwork-card {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-medium);
+  cursor: pointer;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.artwork-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+
+/* Artwork Image */
+.artwork-image-container {
+  position: relative;
+  width: 100%;
+  height: 300px;
+  overflow: hidden;
+  background-color: var(--primary-cream);
+}
+
+.artwork-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: all var(--transition-slow);
+}
+
+.artwork-card:hover .artwork-image {
+  transform: scale(1.03);
+}
+
+.artwork-image-loading {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--primary-cream);
+}
+
+.loading-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--light-gray);
+  border-top: 3px solid var(--primary-brown);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.artwork-image-error {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--light-gray);
+  color: var(--warm-gray);
+}
+
+.error-icon {
+  font-size: 2rem;
+  margin-bottom: var(--spacing-sm);
+}
+
+.error-text {
+  font-size: 0.875rem;
+}
+
+/* Artwork Badge */
+.artwork-badge {
+  position: absolute;
+  top: var(--spacing-md);
+  left: var(--spacing-md);
+  background: var(--gold-accent);
+  color: var(--white);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  z-index: 2;
+}
+
+/* Artwork Overlay */
+.artwork-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    to bottom,
+    rgba(44, 44, 44, 0) 0%,
+    rgba(44, 44, 44, 0.05) 60%,
+    rgba(44, 44, 44, 0.8) 100%
+  );
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: var(--spacing-md);
+  opacity: 0;
+  transition: all var(--transition-medium);
+}
+
+.artwork-card:hover .artwork-overlay {
+  opacity: 1;
+}
+
+.artwork-actions {
+  display: flex;
+  gap: var(--spacing-sm);
+  align-self: center;
+  margin-top: auto;
+  margin-bottom: var(--spacing-md);
+  transform: translateY(20px);
+  transition: transform var(--transition-medium);
+}
+
+.artwork-card:hover .artwork-actions {
+  transform: translateY(0);
+}
+
+.artwork-action-btn {
+  padding: var(--spacing-sm) var(--spacing-md);
+  font-size: 0.875rem;
+  font-weight: 600;
+  border-radius: var(--radius-md);
+  white-space: nowrap;
+  transition: all var(--transition-fast);
+}
+
+.artwork-year-overlay {
+  align-self: flex-end;
+  transform: translateY(20px);
+  transition: transform var(--transition-medium);
+}
+
+.artwork-card:hover .artwork-year-overlay {
+  transform: translateY(0);
+}
+
+.artwork-year {
+  background: var(--white);
+  color: var(--primary-brown);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+/* Artwork Info */
+.artwork-info {
+  padding: var(--spacing-lg);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.artwork-category {
+  margin-bottom: var(--spacing-xs);
+}
+
+.category-tag {
+  background: var(--primary-cream);
+  color: var(--primary-brown);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.artwork-title {
+  font-size: 1.375rem;
+  font-weight: 600;
+  margin: 0;
+  color: var(--primary-brown);
+  line-height: 1.3;
+}
+
+.artwork-artist {
+  font-size: 1rem;
+  color: var(--warm-gray);
+  margin: 0;
+  font-style: italic;
+  cursor: pointer;
+  transition: color var(--transition-fast);
+}
+
+.artwork-artist:hover {
+  color: var(--primary-brown);
+  text-decoration: underline;
+}
+
+.artwork-description {
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--warm-gray);
+  margin: 0;
+  flex: 1;
+}
+
+/* Artwork Details */
+.artwork-details {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  margin: var(--spacing-sm) 0;
+  padding: var(--spacing-sm) 0;
+  border-top: 1px solid var(--light-gray);
+  border-bottom: 1px solid var(--light-gray);
+}
+
+.artwork-materials,
+.artwork-dimensions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.detail-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--primary-brown);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.detail-value {
+  font-size: 0.875rem;
+  color: var(--warm-gray);
+  text-align: right;
+}
+
+/* Artwork Tags */
+.artwork-tags {
+  display: flex;
+  gap: var(--spacing-xs);
+  flex-wrap: wrap;
+  margin: var(--spacing-sm) 0;
+}
+
+.artwork-tag {
+  background: var(--light-gray);
+  color: var(--charcoal);
+  padding: 2px var(--spacing-xs);
+  border-radius: var(--radius-sm);
+  font-size: 0.6875rem;
+  font-weight: 500;
+}
+
+/* Artwork Footer */
+.artwork-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: auto;
+  padding-top: var(--spacing-sm);
+}
+
+.artwork-year-created,
+.artwork-collection {
+  display: flex;
+  flex-direction: column;
+}
+
+.year-label,
+.collection-label {
+  font-size: 0.75rem;
+  color: var(--warm-gray);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.year-value,
+.collection-value {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--charcoal);
+  text-transform: capitalize;
+}
+
+.artwork-collection {
+  text-align: right;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .artwork-image-container {
+    height: 250px;
+  }
+  
+  .artwork-info {
+    padding: var(--spacing-md);
+    gap: var(--spacing-xs);
+  }
+  
+  .artwork-title {
+    font-size: 1.25rem;
+  }
+  
+  .artwork-actions {
+    flex-direction: column;
+    gap: var(--spacing-xs);
+  }
+  
+  .artwork-action-btn {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    font-size: 0.8125rem;
+  }
+  
+  .artwork-details {
+    gap: 2px;
+  }
+  
+  .artwork-materials,
+  .artwork-dimensions {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
+  
+  .detail-value {
+    text-align: left;
+  }
+  
+  .artwork-footer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-xs);
+  }
+  
+  .artwork-collection {
+    text-align: left;
+  }
+}
+
+@media (max-width: 480px) {
+  .artwork-image-container {
+    height: 220px;
+  }
+  
+  .artwork-overlay {
+    opacity: 1;
+    background: linear-gradient(
+      to bottom,
+      rgba(44, 44, 44, 0) 0%,
+      rgba(44, 44, 44, 0.2) 70%,
+      rgba(44, 44, 44, 0.9) 100%
+    );
+  }
+  
+  .artwork-actions,
+  .artwork-year-overlay {
+    transform: translateY(0);
+  }
+}
+
+/* Accessibility */
+.artwork-card:focus {
+  outline: 2px solid var(--gold-accent);
+  outline-offset: 2px;
+}
+
+.artwork-action-btn:focus {
+  outline: 2px solid var(--gold-accent);
+  outline-offset: 2px;
+}
+
+/* Animation for card entrance */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.artwork-card.animate-in {
+  animation: fadeInUp 0.6s ease-out forwards;
+}
+
+/* Special effects for featured artworks */
+.artwork-card:has(.artwork-badge) {
+  border: 2px solid transparent;
+  background: linear-gradient(var(--white), var(--white)) padding-box,
+              linear-gradient(45deg, var(--gold-accent), var(--copper-accent)) border-box;
+}
+
+/* Hover effects for better interaction */
+.artwork-card:hover .artwork-title {
+  color: var(--gold-accent);
+}
+
+.artwork-card:hover .category-tag {
+  background: var(--gold-accent);
+  color: var(--white);
+}
