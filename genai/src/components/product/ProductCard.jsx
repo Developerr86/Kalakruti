@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useParallax, useScrollAnimation, useImageReveal, useMorphingBackground, useParallaxHover, useMultiLayerHover } from '../../hooks';
 import './ProductCard.css';
 
 const ArtworkCard = ({ artwork, onViewDetails, onViewArtist, index = 0 }) => {
   const [isImageLoaded, setIsImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const navigate = useNavigate();
   const [cardRef, parallaxOffset] = useParallax(0.05 + (index % 3) * 0.02, 'vertical');
   const [containerRef, isVisible, scrollProgress, velocity] = useScrollAnimation(0.3, true);
   const [imageRef] = useImageReveal('up', 0.8);
@@ -18,6 +21,22 @@ const ArtworkCard = ({ artwork, onViewDetails, onViewArtist, index = 0 }) => {
     { intensity: 1.2, depth: 1.5 },    // Badge layer
     { intensity: 0.8, depth: 0.3 }     // Info layer
   ]);
+
+  const handleCardClick = (e) => {
+    e.preventDefault();
+    if (isTransitioning) return;
+    
+    setIsTransitioning(true);
+    
+    // Add scale-up animation class
+    const cardElement = e.currentTarget;
+    cardElement.classList.add('story-transition');
+    
+    // Navigate after animation starts
+    setTimeout(() => {
+      navigate(`/story/${artwork.id}`);
+    }, 300);
+  };
 
   const handleViewDetails = (e) => {
     e.stopPropagation();
@@ -51,13 +70,15 @@ const ArtworkCard = ({ artwork, onViewDetails, onViewArtist, index = 0 }) => {
         cardHoverRef(node);
         layerHoverRef(node);
       }}
-      className={`artwork-card premium-artwork-card parallax-hover-card ${isVisible ? 'reveal-active' : ''}`}
+      className={`artwork-card premium-artwork-card parallax-hover-card ${isVisible ? 'reveal-active' : ''} ${isTransitioning ? 'story-transition' : ''}`}
+      onClick={handleCardClick}
       style={{
         ...getCardHoverStyle(),
         transform: `${getCardHoverStyle().transform} translateY(${parallaxOffset}px) scale(${0.95 + scrollProgress * 0.05}) rotateX(${velocity * 0.3}deg)`,
         opacity: 0.8 + scrollProgress * 0.2,
         transition: isVisible ? 'opacity 1s ease' : 'none',
-        animationDelay: `${index * 0.1}s`
+        animationDelay: `${index * 0.1}s`,
+        cursor: 'pointer'
       }}
     >
       <div 
