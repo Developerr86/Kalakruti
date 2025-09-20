@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { getArtworkById, getArtistById } from '../../data/mockData';
 import { useScrollAnimation, useTextReveal, useImageReveal } from '../../hooks';
 import Header from '../layout/Header';
+import CoverFlow from '../ui/CoverFlow';
 import './StoryPage.css';
 
 const StoryPage = () => {
@@ -121,22 +122,51 @@ const StoryPage = () => {
       <section className="story-content">
         <div className="container">
           
-          {/* Image Gallery */}
+          {/* Image Gallery with CoverFlow */}
           <div 
             ref={galleryRef}
             className={`story-section image-gallery ${galleryVisible ? 'visible' : ''}`}
           >
-            <h2 className="section-title">The Artwork</h2>
-            <div className="gallery-grid">
-              <div className="gallery-main">
-                <img src={artwork.image} alt={artwork.title} />
-              </div>
-              <div className="gallery-thumbnails">
-                <img src={artwork.image} alt={`${artwork.title} - Detail 1`} />
-                <img src={artwork.image} alt={`${artwork.title} - Detail 2`} />
-                <img src={artwork.image} alt={`${artwork.title} - Detail 3`} />
-              </div>
-            </div>
+            <h2 className="section-title">Explore The Artwork</h2>
+            <CoverFlow 
+              items={[
+                {
+                  id: 'main',
+                  image: artwork.image,
+                  title: artwork.title,
+                  description: 'Main artwork view'
+                },
+                {
+                  id: 'detail1',
+                  image: artwork.image,
+                  title: `${artwork.title} - Detail View`,
+                  description: 'Close-up detail of the artwork'
+                },
+                {
+                  id: 'detail2',
+                  image: artwork.image,
+                  title: `${artwork.title} - Texture Detail`,
+                  description: 'Texture and material detail'
+                },
+                {
+                  id: 'detail3',
+                  image: artwork.image,
+                  title: `${artwork.title} - Artist Signature`,
+                  description: 'Artist signature and date'
+                },
+                {
+                  id: 'process1',
+                  image: artwork.image,
+                  title: 'Creation Process',
+                  description: 'Behind the scenes of creation'
+                }
+              ]}
+              onItemClick={(item, index) => {
+                console.log('Gallery item clicked:', item, index);
+              }}
+              autoPlay={false}
+              className="story-coverflow"
+            />
           </div>
 
           {/* Video Section */}

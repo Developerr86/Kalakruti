@@ -458,11 +458,34 @@
 
 /* Loading States */
 .app-loading {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 100vh;
-  background: var(--light-cream);
+  background: linear-gradient(135deg, var(--primary-cream) 0%, var(--white) 100%);
+  gap: var(--spacing-lg);
+  z-index: var(--z-modal);
+}
+
+.app-loading .loading-spinner {
+  width: 60px;
+  height: 60px;
+  border: 4px solid var(--light-gray);
+  border-top: 4px solid var(--primary-brown);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.app-loading p {
+  font-size: 1.2rem;
+  color: var(--warm-gray);
+  font-weight: 500;
+  margin: 0;
 }
 
 .app-loading-spinner {

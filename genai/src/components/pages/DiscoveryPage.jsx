@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { artworks, categories, getFeaturedArtworks } from '../../data/mockData';
-import { useScrollAnimation, useParallax, useDebounce } from '../../hooks';
+import { useScrollAnimation, useParallax } from '../../hooks';
 import Header from '../layout/Header';
 import ProductCard from '../product/ProductCard';
 import './Discovery.css';
@@ -8,11 +8,9 @@ import './Discovery.css';
 const DiscoveryPage = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [sortBy, setSortBy] = useState('featured');
-  const [searchQuery, setSearchQuery] = useState('');
   const [filteredArtworks, setFilteredArtworks] = useState(artworks);
   const [showArtworkModal, setShowArtworkModal] = useState(false);
   const [selectedArtwork, setSelectedArtwork] = useState(null);
-  const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
   // Animation hooks
   const [heroRef, heroVisible] = useScrollAnimation(0.3, true);
@@ -29,17 +27,6 @@ const DiscoveryPage = () => {
       filtered = filtered.filter(artwork => artwork.category === selectedCategory);
     }
 
-    // Search filter
-    if (debouncedSearchQuery) {
-      const query = debouncedSearchQuery.toLowerCase();
-      filtered = filtered.filter(artwork =>
-        artwork.title.toLowerCase().includes(query) ||
-        artwork.artistName.toLowerCase().includes(query) ||
-        artwork.description.toLowerCase().includes(query) ||
-        artwork.tags.some(tag => tag.toLowerCase().includes(query))
-      );
-    }
-
     // Sort artworks
     switch (sortBy) {
       case 'newest':
@@ -52,7 +39,7 @@ const DiscoveryPage = () => {
     }
 
     setFilteredArtworks(filtered);
-  }, [selectedCategory, sortBy, debouncedSearchQuery]);
+  }, [selectedCategory, sortBy]);
 
   const handleViewDetails = (artwork) => {
     setSelectedArtwork(artwork);
@@ -121,18 +108,6 @@ const DiscoveryPage = () => {
       >
         <div className="container">
           <div className="filters-content">
-            {/* Search Bar */}
-            <div className="discovery-search">
-              <input
-                type="text"
-                placeholder="Search artworks, artists, styles..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="discovery-search-input"
-              />
-              <span className="search-icon">🔍</span>
-            </div>
-
             {/* Category Filters */}
             <div className="category-filters">
               <button
