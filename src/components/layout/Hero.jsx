@@ -1,11 +1,18 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { featuredArtist } from '../../data/mockData';
+import { dataService } from '../../firebase/dataService';
 import { useMultiLayerParallax, useScrollAnimation, useTextReveal, useImageReveal, useMagneticEffect, useFloatingAnimation, useMorphingBackground, useSmoothScroll } from '../../hooks';
 import PlasmaBackground from '../ui/PlasmaBackground';
 import './Hero.css';
 
 const Hero = ({ onExploreClick, onViewArtistClick }) => {
+  const [stats, setStats] = useState({
+    artworks: 0,
+    artists: 0,
+    categories: 0
+  });
+  const [loading, setLoading] = useState(true);
+  
   const { getParallaxStyle } = useMultiLayerParallax();
   const [titleRef, titleVisible] = useScrollAnimation(0.3, true);
   const [subtitleRef] = useTextReveal(0.05);
@@ -17,6 +24,37 @@ const Hero = ({ onExploreClick, onViewArtistClick }) => {
   const [floatingRef3] = useFloatingAnimation(0.7, 0.6);
   const [morphingRef] = useMorphingBackground();
   const { scrollToElement } = useSmoothScroll();
+
+  // Load stats from Firebase
+  useEffect(() => {
+    const loadStats = async () => {
+      try {
+        const [artworks, artists, categories] = await Promise.all([
+          dataService.getArtworks(),
+          dataService.getArtists(),
+          dataService.getCategories()
+        ]);
+        
+        setStats({
+          artworks: artworks.length,
+          artists: artists.length,
+          categories: categories.length
+        });
+      } catch (error) {
+        console.error('Error loading hero stats:', error);
+        // Fallback to default values
+        setStats({
+          artworks: 100,
+          artists: 25,
+          categories: 4
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadStats();
+  }, []);
 
   return (
     <section 
@@ -111,15 +149,15 @@ const Hero = ({ onExploreClick, onViewArtistClick }) => {
               }}
             >
               <div className="hero-stat enchanted-stat">
-                <span className="hero-stat-number">100+</span>
+                <span className="hero-stat-number">{stats.artworks}+</span>
                 <span className="hero-stat-label">Artworks</span>
               </div>
               <div className="hero-stat enchanted-stat">
-                <span className="hero-stat-number">25+</span>
+                <span className="hero-stat-number">{stats.artists}+</span>
                 <span className="hero-stat-label">Artists</span>
               </div>
               <div className="hero-stat enchanted-stat">
-                <span className="hero-stat-number">4</span>
+                <span className="hero-stat-number">{stats.categories}</span>
                 <span className="hero-stat-label">Collections</span>
               </div>
             </div>

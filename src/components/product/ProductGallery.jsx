@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ProductCard from './ProductCard';
-import { artworks, categories } from '../../data/mockData';
-import { filterArtworks } from '../../data/mockData';
+import { dataService } from '../../firebase/dataService';
 import { useMultiLayerParallax, useScrollAnimation, useTextReveal, useFloatingAnimation } from '../../hooks';
 import './ProductGallery.css';
 
@@ -11,10 +10,13 @@ const ProductGallery = ({
   onQuickView,
   onAddToCart 
 }) => {
-  const [filteredArtworks, setFilteredArtworks] = useState(artworks);
-  const [sortBy, setSortBy] = useState('featured'); // featured, price-low, price-high, newest, oldest
+  const [artworks, setArtworks] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [filteredArtworks, setFilteredArtworks] = useState([]);
+  const [sortBy, setSortBy] = useState('featured'); // featured, newest, popular, oldest
   const [viewMode, setViewMode] = useState('grid'); // grid, list
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
   const { getParallaxStyle } = useMultiLayerParallax();
   const [titleRef] = useTextReveal(0.03);
   const [categoriesRef, categoriesVisible] = useScrollAnimation(0.2, true);
@@ -22,8 +24,31 @@ const ProductGallery = ({
   const [floatingShape2] = useFloatingAnimation(0.4, 0.8);
   const [floatingShape3] = useFloatingAnimation(0.2, 1.2);
 
+  // Load initial data from Firebase
   useEffect(() => {
-    setIsLoading(true);
+    const loadInitialData = async () => {
+      try {
+        setIsLoading(true);
+        const [artworksData, categoriesData] = await Promise.all([
+          dataService.getArtworks(),
+          dataService.getCategories()
+        ]);
+        
+        setArtworks(artworksData);
+        setCategories(categoriesData);
+      } catch (err) {
+        setError(err.message);
+        console.error('Error loading gallery data:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadInitialData();
+  }, []);
+
+  useEffect(() => {
+    if (artworks.length === 0) return;
     
     // Simulate loading delay for better UX
     const timeoutId = setTimeout(() => {
@@ -41,7 +66,7 @@ const ProductGallery = ({
           artwork.title.toLowerCase().includes(query) ||
           artwork.description.toLowerCase().includes(query) ||
           artwork.artistName.toLowerCase().includes(query) ||
-          artwork.tags.some(tag => tag.toLowerCase().includes(query)) ||
+          (artwork.tags && artwork.tags.some(tag => tag.toLowerCase().includes(query))) ||
           artwork.materials.toLowerCase().includes(query)
         );
       }
@@ -55,28 +80,24 @@ const ProductGallery = ({
             return 0;
           });
           break;
-        case 'price-low':
-          filtered.sort((a, b) => a.price - b.price);
-          break;
-        case 'price-high':
-          filtered.sort((a, b) => b.price - a.price);
-          break;
         case 'newest':
-          filtered.sort((a, b) => b.yearCreated - a.yearCreated);
+          filtered.sort((a, b) => new Date(b.createdAt || b.yearCreated) - new Date(a.createdAt || a.yearCreated));
+          break;
+        case 'popular':
+          filtered.sort((a, b) => (b.views || 0) - (a.views || 0));
           break;
         case 'oldest':
-          filtered.sort((a, b) => a.yearCreated - b.yearCreated);
+          filtered.sort((a, b) => new Date(a.createdAt || a.yearCreated) - new Date(b.createdAt || b.yearCreated));
           break;
         default:
           break;
       }
 
       setFilteredArtworks(filtered);
-      setIsLoading(false);
     }, 300);
 
     return () => clearTimeout(timeoutId);
-  }, [searchQuery, selectedCategory, sortBy]);
+  }, [searchQuery, selectedCategory, sortBy, artworks]);
 
   const handleSortChange = (e) => {
     setSortBy(e.target.value);
@@ -91,6 +112,21 @@ const ProductGallery = ({
     const category = categories.find(cat => cat.id === selectedCategory);
     return category ? category.name : 'All Artworks';
   };
+
+  // Show error state
+  if (error) {
+    return (
+      <section className="product-gallery" id="gallery">
+        <div className="container">
+          <div className="gallery-error">
+            <h2>Unable to load gallery</h2>
+            <p>{error}</p>
+            <button onClick={() => window.location.reload()}>Try Again</button>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="product-gallery" id="gallery">
@@ -151,9 +187,8 @@ const ProductGallery = ({
                 className="sort-select"
               >
                 <option value="featured">Featured First</option>
-                <option value="price-low">Price: Low to High</option>
-                <option value="price-high">Price: High to Low</option>
                 <option value="newest">Newest First</option>
+                <option value="popular">Most Popular</option>
                 <option value="oldest">Oldest First</option>
               </select>
             </div>

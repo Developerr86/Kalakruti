@@ -8,7 +8,7 @@ const Login = ({ onSwitchToSignup, onSuccess }) => {
   });
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
-  const { login, loading, error, clearError } = useAuth();
+  const { login, signInWithGoogle, loading, error, clearError } = useAuth();
 
   const validateForm = () => {
     const newErrors = {};
@@ -68,34 +68,21 @@ const Login = ({ onSwitchToSignup, onSuccess }) => {
     }
   };
 
+  const handleGoogleSignIn = async () => {
+    try {
+      await signInWithGoogle();
+      onSuccess && onSuccess();
+    } catch (error) {
+      console.log('Google sign in error:', error.message);
+    }
+  };
+
   const handleDemoLogin = async () => {
-    // Pre-fill with demo credentials
+    // Use demo credentials
     const demoCredentials = {
       email: 'demo@kalakruti.com',
       password: 'demo123'
     };
-
-    // Create demo user if it doesn't exist
-    const users = JSON.parse(localStorage.getItem('artUsers') || '[]');
-    const demoUser = users.find(u => u.email === demoCredentials.email);
-    
-    if (!demoUser) {
-      const newDemoUser = {
-        id: 'demo-user',
-        name: 'Demo User',
-        email: demoCredentials.email,
-        password: demoCredentials.password,
-        joinDate: new Date().toISOString(),
-        avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&q=80',
-        preferences: {
-          theme: 'light',
-          notifications: true,
-          newsletter: false
-        }
-      };
-      users.push(newDemoUser);
-      localStorage.setItem('artUsers', JSON.stringify(users));
-    }
 
     setFormData(demoCredentials);
     
@@ -201,6 +188,15 @@ const Login = ({ onSwitchToSignup, onSuccess }) => {
         <div className="auth-divider">
           <span>or</span>
         </div>
+
+        <button
+          type="button"
+          onClick={handleGoogleSignIn}
+          className="google-login-btn"
+          disabled={loading}
+        >
+          🔗 Sign in with Google
+        </button>
 
         <button
           type="button"

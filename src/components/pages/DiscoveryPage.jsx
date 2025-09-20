@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { artworks, categories, getFeaturedArtworks } from '../../data/mockData';
+import { dataService } from '../../firebase/dataService';
 import { useScrollAnimation, useParallax } from '../../hooks';
 import Header from '../layout/Header';
 import ProductCard from '../product/ProductCard';
@@ -8,9 +8,13 @@ import './Discovery.css';
 const DiscoveryPage = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [sortBy, setSortBy] = useState('featured');
-  const [filteredArtworks, setFilteredArtworks] = useState(artworks);
+  const [artworks, setArtworks] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [filteredArtworks, setFilteredArtworks] = useState([]);
   const [showArtworkModal, setShowArtworkModal] = useState(false);
   const [selectedArtwork, setSelectedArtwork] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   // Animation hooks
   const [heroRef, heroVisible] = useScrollAnimation(0.3, true);
@@ -18,8 +22,34 @@ const DiscoveryPage = () => {
   const [galleryRef, galleryVisible] = useScrollAnimation(0.2, true);
   const [heroParallaxRef, heroParallaxOffset] = useParallax(0.3, 'vertical');
 
+  // Load data from Firebase
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        const [artworksData, categoriesData] = await Promise.all([
+          dataService.getArtworks(),
+          dataService.getCategories()
+        ]);
+        
+        setArtworks(artworksData);
+        setCategories(categoriesData);
+        setFilteredArtworks(artworksData);
+      } catch (err) {
+        setError(err.message);
+        console.error('Error loading data:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
+
   // Filter and search logic
   useEffect(() => {
+    if (artworks.length === 0) return;
+
     let filtered = [...artworks];
 
     // Category filter
@@ -30,7 +60,10 @@ const DiscoveryPage = () => {
     // Sort artworks
     switch (sortBy) {
       case 'newest':
-        filtered.sort((a, b) => b.yearCreated - a.yearCreated);
+        filtered.sort((a, b) => new Date(b.createdAt || b.yearCreated) - new Date(a.createdAt || a.yearCreated));
+        break;
+      case 'popular':
+        filtered.sort((a, b) => (b.views || 0) - (a.views || 0));
         break;
       case 'featured':
       default:
@@ -39,11 +72,19 @@ const DiscoveryPage = () => {
     }
 
     setFilteredArtworks(filtered);
-  }, [selectedCategory, sortBy]);
+  }, [selectedCategory, sortBy, artworks]);
 
-  const handleViewDetails = (artwork) => {
-    setSelectedArtwork(artwork);
-    setShowArtworkModal(true);
+  const handleViewDetails = async (artwork) => {
+    try {
+      // Get full artwork details and increment view count
+      const fullArtwork = await dataService.getArtworkById(artwork.id);
+      setSelectedArtwork(fullArtwork || artwork);
+      setShowArtworkModal(true);
+    } catch (error) {
+      console.error('Error loading artwork details:', error);
+      setSelectedArtwork(artwork);
+      setShowArtworkModal(true);
+    }
   };
 
   const handleCloseArtworkModal = () => {
@@ -55,6 +96,33 @@ const DiscoveryPage = () => {
     console.log('View artist:', artistId);
     alert('Artist profile feature coming soon!');
   };
+
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="discovery-page" style={{ paddingTop: '80px' }}>
+        <Header />
+        <div className="discovery-loading">
+          <div className="loading-spinner"></div>
+          <p>Loading artworks...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="discovery-page" style={{ paddingTop: '80px' }}>
+        <Header />
+        <div className="discovery-error">
+          <h2>Unable to load artworks</h2>
+          <p>{error}</p>
+          <button onClick={() => window.location.reload()}>Try Again</button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="discovery-page" style={{ paddingTop: '80px' }}>
@@ -94,7 +162,7 @@ const DiscoveryPage = () => {
               <span className="stat-label">Categories</span>
             </div>
             <div className="discovery-stat">
-              <span className="stat-number">{getFeaturedArtworks().length}</span>
+              <span className="stat-number">{artworks.filter(a => a.featured).length}</span>
               <span className="stat-label">Featured</span>
             </div>
           </div>
@@ -138,6 +206,7 @@ const DiscoveryPage = () => {
                 >
                   <option value="featured">Featured First</option>
                   <option value="newest">Newest First</option>
+                  <option value="popular">Most Popular</option>
                 </select>
               </div>
             </div>

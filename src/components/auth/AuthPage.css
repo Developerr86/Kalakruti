@@ -479,6 +479,39 @@
   transform: translateY(-1px);
 }
 
+/* Google Login Button */
+.google-login-btn {
+  width: 100%;
+  background: var(--white);
+  color: var(--text-dark);
+  border: 2px solid var(--border-light);
+  padding: var(--spacing-md);
+  border-radius: var(--radius-md);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
+}
+
+.google-login-btn:hover:not(:disabled) {
+  background: var(--light-gray);
+  border-color: var(--primary-brown);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.demo-login-btn:disabled,
+.google-login-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
 /* Footer */
 .auth-footer {
   text-align: center;

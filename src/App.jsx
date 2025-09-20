@@ -8,6 +8,11 @@ import StoryPage from './components/pages/StoryPage';
 import MyArtworksPage from './components/pages/MyArtworksPage';
 import './App.css';
 
+// Only import DataSeeder in development
+const DataSeeder = process.env.NODE_ENV === 'development' 
+  ? React.lazy(() => import('./components/admin/DataSeeder'))
+  : null;
+
 const AppContent = () => {
   const { isAuthenticated, loading } = useAuth();
 
@@ -29,6 +34,12 @@ const AppContent = () => {
   // Show main application if user is authenticated
   return (
     <div className="App">
+      {/* Only show DataSeeder in development */}
+      {process.env.NODE_ENV === 'development' && DataSeeder && (
+        <React.Suspense fallback={null}>
+          <DataSeeder />
+        </React.Suspense>
+      )}
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/discovery" element={<DiscoveryPage />} />
