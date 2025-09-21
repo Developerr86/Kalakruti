@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { artworks, categories, getFeaturedArtworks, getArtworksByCategory } from '../../data/mockData';
+import { dataService } from '../../firebase/dataService';
 import { useScrollAnimation, useParallax, useDebounce } from '../../hooks';
 import ProductCard from '../product/ProductCard';
 import './Discovery.css';
@@ -8,7 +8,10 @@ const Discovery = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [sortBy, setSortBy] = useState('featured');
   const [searchQuery, setSearchQuery] = useState('');
-  const [filteredArtworks, setFilteredArtworks] = useState(artworks);
+  const [artworks, setArtworks] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [filteredArtworks, setFilteredArtworks] = useState([]);
+  const [loading, setLoading] = useState(true);
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
   // Animation hooks
@@ -16,6 +19,28 @@ const Discovery = () => {
   const [filtersRef, filtersVisible] = useScrollAnimation(0.3, true);
   const [galleryRef, galleryVisible] = useScrollAnimation(0.2, true);
   const [heroParallaxRef, heroParallaxOffset] = useParallax(0.3, 'vertical');
+
+  // Load data on component mount
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        const [artworksData, categoriesData] = await Promise.all([
+          dataService.getArtworks(),
+          dataService.getCategories()
+        ]);
+        setArtworks(artworksData);
+        setCategories(categoriesData);
+        setFilteredArtworks(artworksData);
+      } catch (error) {
+        console.error('Error loading discovery data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
 
   // Filter and search logic
   useEffect(() => {
@@ -86,7 +111,7 @@ const Discovery = () => {
               <span className="stat-label">Categories</span>
             </div>
             <div className="discovery-stat">
-              <span className="stat-number">{getFeaturedArtworks().length}</span>
+              <span className="stat-number">{artworks.filter(art => art.featured).length}</span>
               <span className="stat-label">Featured</span>
             </div>
           </div>
@@ -160,7 +185,12 @@ const Discovery = () => {
               {filteredArtworks.length} {filteredArtworks.length === 1 ? 'Artwork' : 'Artworks'} Found
             </h2>
             
-            {filteredArtworks.length === 0 ? (
+            {loading ? (
+              <div className="loading-state">
+                <div className="loading-spinner"></div>
+                <p>Loading artworks...</p>
+              </div>
+            ) : filteredArtworks.length === 0 ? (
               <div className="no-results">
                 <div className="no-results-icon">🎨</div>
                 <h3>No artworks found</h3>

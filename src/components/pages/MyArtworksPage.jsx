@@ -1,12 +1,19 @@
 import React, { useState, useEffect } from 'react';
+import { where, orderBy } from 'firebase/firestore';
 import { useScrollAnimation, useTextReveal, useImageReveal } from '../../hooks';
+import { useAuth } from '../../contexts/AuthContext';
+import { storageService } from '../../services/storageService';
+import { firestoreService } from '../../firebase/firestoreService';
 import Header from '../layout/Header';
 import './MyArtworksPage.css';
 
 const MyArtworksPage = () => {
+  const { user } = useAuth();
   const [userArtworks, setUserArtworks] = useState([]);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadError, setUploadError] = useState(null);
   const [uploadForm, setUploadForm] = useState({
     title: '',
     description: '',
@@ -15,7 +22,8 @@ const MyArtworksPage = () => {
     dimensions: '',
     image: null,
     imagePreview: null,
-    tags: ''
+    tags: '',
+    price: ''
   });
 
   // Animation hooks
@@ -31,13 +39,29 @@ const MyArtworksPage = () => {
     { id: 'handicrafts', name: 'Handicrafts' }
   ];
 
-  // Load user artworks from localStorage on component mount
+  // Load user artworks from Firestore on component mount
   useEffect(() => {
-    const savedArtworks = localStorage.getItem('userArtworks');
-    if (savedArtworks) {
-      setUserArtworks(JSON.parse(savedArtworks));
-    }
-  }, []);
+    const loadUserArtworks = async () => {
+      if (!user) return;
+      
+      try {
+        const artworks = await firestoreService.queryCollection('artworks', [
+          where('artistId', '==', user.uid),
+          orderBy('createdAt', 'desc')
+        ]);
+        setUserArtworks(artworks);
+      } catch (error) {
+        console.error('Error loading user artworks:', error);
+        // Fallback to localStorage for backward compatibility
+        const savedArtworks = localStorage.getItem('userArtworks');
+        if (savedArtworks) {
+          setUserArtworks(JSON.parse(savedArtworks));
+        }
+      }
+    };
+
+    loadUserArtworks();
+  }, [user]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -64,28 +88,67 @@ const MyArtworksPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsUploading(true);
+    
+    if (!user) {
+      setUploadError('You must be logged in to upload artwork');
+      return;
+    }
 
-    // Simulate upload process
-    setTimeout(() => {
-      const newArtwork = {
-        id: `user_artwork_${Date.now()}`,
+    if (!uploadForm.image) {
+      setUploadError('Please select an image to upload');
+      return;
+    }
+
+    setIsUploading(true);
+    setUploadError(null);
+    setUploadProgress(0);
+
+    try {
+      // Generate artwork ID
+      const artworkId = `artwork_${Date.now()}_${user.uid}`;
+      
+      // Upload image to Vercel Blob storage
+      const uploadResult = await storageService.uploadArtworkImage(
+        uploadForm.image, 
+        artworkId,
+        {
+          onProgress: (progress) => {
+            setUploadProgress(progress);
+          },
+          metadata: {
+            title: uploadForm.title,
+            artistId: user.uid,
+            category: uploadForm.category
+          }
+        }
+      );
+
+      // Create artwork document in Firestore
+      const artworkData = {
         title: uploadForm.title,
         description: uploadForm.description,
         category: uploadForm.category,
         materials: uploadForm.materials,
         dimensions: uploadForm.dimensions,
-        image: uploadForm.imagePreview, // In real app, this would be uploaded to server
-        tags: uploadForm.tags.split(',').map(tag => tag.trim()),
-        artistName: 'You', // In real app, this would be from user profile
+        price: uploadForm.price ? parseFloat(uploadForm.price) : null,
+        image: uploadResult.downloadURL,
+        imagePath: uploadResult.path,
+        tags: uploadForm.tags.split(',').map(tag => tag.trim()).filter(tag => tag),
+        artistId: user.uid,
+        artistName: user.displayName || user.email,
         yearCreated: new Date().getFullYear(),
-        uploadDate: new Date().toISOString(),
-        status: 'pending' // pending, approved, rejected
+        status: 'published', // Changed from 'pending' to 'published' - no review needed
+        visibility: 'public',
+        views: 0,
+        likes: 0,
+        featured: false,
+        uploadMetadata: uploadResult.metadata
       };
 
-      const updatedArtworks = [...userArtworks, newArtwork];
-      setUserArtworks(updatedArtworks);
-      localStorage.setItem('userArtworks', JSON.stringify(updatedArtworks));
+      const newArtwork = await firestoreService.create('artworks', artworkData);
+      
+      // Update local state
+      setUserArtworks(prev => [newArtwork, ...prev]);
 
       // Reset form
       setUploadForm({
@@ -96,27 +159,63 @@ const MyArtworksPage = () => {
         dimensions: '',
         image: null,
         imagePreview: null,
-        tags: ''
+        tags: '',
+        price: ''
       });
       
+      setUploadProgress(0);
       setIsUploading(false);
       setShowUploadModal(false);
-    }, 2000);
+      
+      // Show success message
+      alert('Artwork uploaded successfully and is now live in the discovery section!');
+      
+    } catch (error) {
+      console.error('Error uploading artwork:', error);
+      setUploadError(error.message || 'Failed to upload artwork. Please try again.');
+      setIsUploading(false);
+      setUploadProgress(0);
+    }
   };
 
-  const handleDeleteArtwork = (artworkId) => {
-    const updatedArtworks = userArtworks.filter(artwork => artwork.id !== artworkId);
-    setUserArtworks(updatedArtworks);
-    localStorage.setItem('userArtworks', JSON.stringify(updatedArtworks));
+  const handleDeleteArtwork = async (artworkId) => {
+    if (!confirm('Are you sure you want to delete this artwork? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      const artwork = userArtworks.find(art => art.id === artworkId);
+      
+      // Delete image from storage if it exists
+      if (artwork && artwork.imagePath) {
+        try {
+          await storageService.deleteFile(artwork.image);
+        } catch (error) {
+          console.warn('Error deleting image from storage:', error);
+          // Continue with artwork deletion even if image deletion fails
+        }
+      }
+      
+      // Delete artwork document from Firestore
+      await firestoreService.delete('artworks', artworkId);
+      
+      // Update local state
+      setUserArtworks(prev => prev.filter(artwork => artwork.id !== artworkId));
+      
+      alert('Artwork deleted successfully');
+    } catch (error) {
+      console.error('Error deleting artwork:', error);
+      alert('Failed to delete artwork. Please try again.');
+    }
   };
 
   const getStatusBadge = (status) => {
     const badges = {
-      pending: { text: 'Pending Review', class: 'status-pending' },
-      approved: { text: 'Approved', class: 'status-approved' },
-      rejected: { text: 'Rejected', class: 'status-rejected' }
+      published: { text: 'Live', class: 'status-published' },
+      draft: { text: 'Draft', class: 'status-draft' },
+      archived: { text: 'Archived', class: 'status-archived' }
     };
-    return badges[status] || badges.pending;
+    return badges[status] || badges.published;
   };
 
   return (
@@ -162,15 +261,15 @@ const MyArtworksPage = () => {
             </div>
             <div className="stat-item">
               <span className="stat-number">
-                {userArtworks.filter(art => art.status === 'approved').length}
+                {userArtworks.filter(art => art.status === 'published').length}
               </span>
-              <span className="stat-label">Approved</span>
+              <span className="stat-label">Published</span>
             </div>
             <div className="stat-item">
               <span className="stat-number">
-                {userArtworks.filter(art => art.status === 'pending').length}
+                {userArtworks.reduce((total, art) => total + (art.views || 0), 0)}
               </span>
-              <span className="stat-label">Pending</span>
+              <span className="stat-label">Total Views</span>
             </div>
           </div>
 
@@ -272,6 +371,25 @@ const MyArtworksPage = () => {
             </div>
             
             <form onSubmit={handleSubmit} className="upload-form">
+              {uploadError && (
+                <div className="error-message">
+                  <span className="error-icon">⚠️</span>
+                  {uploadError}
+                </div>
+              )}
+              
+              {isUploading && (
+                <div className="upload-progress">
+                  <div className="progress-bar">
+                    <div 
+                      className="progress-fill" 
+                      style={{ width: `${uploadProgress}%` }}
+                    ></div>
+                  </div>
+                  <span className="progress-text">{Math.round(uploadProgress)}% uploaded</span>
+                </div>
+              )}
+              
               <div className="form-grid">
                 
                 {/* Image Upload */}
@@ -357,6 +475,21 @@ const MyArtworksPage = () => {
                       onChange={handleInputChange}
                       required
                       placeholder="e.g., 24' x 36', 15cm x 20cm"
+                    />
+                  </div>
+
+                  {/* Price */}
+                  <div className="form-group">
+                    <label htmlFor="price">Price (optional)</label>
+                    <input
+                      type="number"
+                      id="price"
+                      name="price"
+                      value={uploadForm.price}
+                      onChange={handleInputChange}
+                      min="0"
+                      step="0.01"
+                      placeholder="Enter price in USD"
                     />
                   </div>
                 </div>

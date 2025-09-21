@@ -2,7 +2,7 @@ import { vercelBlobService } from './vercelBlobService';
 import { storageService as firebaseStorageService } from '../firebase/storageService';
 
 // Storage provider configuration
-const STORAGE_PROVIDER = process.env.REACT_APP_STORAGE_PROVIDER || 'vercel'; // 'vercel' or 'firebase'
+const STORAGE_PROVIDER = import.meta.env.VITE_STORAGE_PROVIDER || 'vercel'; // 'vercel' or 'firebase'
 
 class UnifiedStorageService {
   constructor() {

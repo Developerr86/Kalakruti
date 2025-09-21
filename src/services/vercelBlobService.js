@@ -2,9 +2,10 @@ import { put, del, list } from '@vercel/blob';
 
 export class VercelBlobService {
   constructor() {
-    this.token = process.env.BLOB_READ_WRITE_TOKEN;
+    // In Vite, environment variables need VITE_ prefix to be accessible in browser
+    this.token = import.meta.env.VITE_BLOB_READ_WRITE_TOKEN || process.env.BLOB_READ_WRITE_TOKEN;
     if (!this.token) {
-      console.warn('BLOB_READ_WRITE_TOKEN not found. Blob operations will fail.');
+      console.warn('VITE_BLOB_READ_WRITE_TOKEN not found. Blob operations will fail.');
     }
   }
 

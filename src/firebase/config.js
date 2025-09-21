@@ -4,16 +4,15 @@ import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
-// Your Firebase config object
-// TODO: Replace with your actual Firebase project configuration
+// Your Firebase config object from environment variables
 const firebaseConfig = {
-  apiKey: "AIzaSyATN2l5cpBADiUhV3i9V198552WkKIjd7g",
-  authDomain: "genai-hackathon-8b309.firebaseapp.com",
-  projectId: "genai-hackathon-8b309",
-  storageBucket: "genai-hackathon-8b309.firebasestorage.app",
-  messagingSenderId: "1056854936497",
-  appId: "1:1056854936497:web:55f28a3a66fd2bcce08b90",
-  measurementId: "G-DPEZQZLCBK"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
 // Initialize Firebase
